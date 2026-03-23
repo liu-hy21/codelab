@@ -1,299 +1,233 @@
 # CLAUDE.md
 
-## 项目概述
+This project is an enterprise-grade frontend application.
 
-这是一个基于 Next.js 的现代 React 全栈项目，采用最新的技术栈和最佳实践构建。
+The AI must strictly follow all architecture rules, folder structure, and coding conventions defined below.
+Do not generate alternative patterns.
 
-## 技术栈
+---
 
-### 核心框架
-- **Next.js 16** - React 全栈框架，支持 App Router
-- **React 19** - 最新版本的 React，支持 React Compiler
-- **TypeScript 5** - 类型安全的 JavaScript
+# Tech Stack
 
-### 样式方案
-- **Tailwind CSS 4** - 原子化 CSS 框架
-- **shadcn/ui** - 基于 Radix UI 的高质量组件库
-- **Lucide React** - 图标库
+Framework:
+- Next.js (App Router)
+- React
+- TypeScript
 
-### 状态管理
-- **Zustand 5** - 轻量级状态管理
-- **React Query (TanStack Query) 5** - 服务端状态管理
+UI:
+- TailwindCSS
+- shadcn/ui
+- Lucide React
 
-### 表单与验证
-- **React Hook Form 7** - 高性能表单处理
-- **Zod 4** - TypeScript 优先的 Schema 验证
+State:
+- Zustand
 
-### HTTP 客户端
-- **Axios** - HTTP 请求库
+Validation:
+- Zod
 
-## 项目结构
+HTTP:
+- Axios
 
-```
-├── src/
-│   ├── app/                    # Next.js App Router
-│   │   ├── layout.tsx          # 根布局
-│   │   ├── page.tsx            # 首页
-│   │   ├── globals.css         # 全局样式
-│   │   └── favicon.ico
-│   ├── components/
-│   │   └── ui/                 # shadcn/ui 组件
-│   │       ├── button.tsx
-│   │       ├── card.tsx
-│   │       ├── dialog.tsx
-│   │       ├── dropdown-menu.tsx
-│   │       ├── input.tsx
-│   │       └── table.tsx
-│   └── lib/
-│       ├── utils.ts            # 工具函数 (cn 等)
-│       └── request.ts          # HTTP 请求封装
-├── public/                     # 静态资源
-├── components.json             # shadcn/ui 配置
-├── next.config.ts              # Next.js 配置
-├── package.json
-└── tsconfig.json
-```
+---
 
-## 开发规范
+# Folder Structure (STRICT)
 
-### 组件开发
+src/
+  app/                 → Next.js pages only
+  components/
+    ui/                → shadcn components ONLY
+    common/            → shared components
+    business/          → business components
+  features/            → feature modules
+  store/               → Zustand stores
+  hooks/               → custom hooks
+  lib/                 → utils / request
+  types/               → global types
+  schemas/             → zod schemas
 
-#### 1. 使用 shadcn/ui 组件
+AI must never place business logic inside app directory.
 
-```bash
-# 添加新组件
-npx shadcn add button
-npx shadcn add card
-```
+---
 
-#### 2. 样式编写规范
+# Page Rules
 
-使用 Tailwind CSS 的类名组合，配合 `cn` 工具函数：
+Each page must follow:
 
-```tsx
-import { cn } from "@/lib/utils"
+page.tsx
+loading.tsx (optional)
+error.tsx (optional)
 
-// 基础用法
-<div className={cn("flex items-center", className)}>
+Page must only:
 
-// 条件类名
-<div className={cn(
-  "flex items-center",
-  isActive && "bg-primary",
-  size === "lg" && "text-lg",
-  className
-)}>
-```
+- compose components
+- call hooks
+- no business logic
 
-#### 3. 组件 Props 定义
+---
 
-```tsx
-import * as React from "react"
+# Component Rules
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "default" | "outline" | "ghost"
-  size?: "sm" | "md" | "lg"
-  asChild?: boolean
-}
+All components must be:
 
-export function Button({
-  className,
-  variant = "default",
-  size = "md",
-  ...props
-}: ButtonProps) {
-  // ...
-}
-```
+- functional component
+- typed with TypeScript
+- use Tailwind only
+- use shadcn when possible
 
-### 状态管理
+Do not create class components.
 
-#### Zustand Store 规范
+---
 
-```typescript
-// stores/user-store.ts
-import { create } from "zustand"
+# Feature Module Structure
 
-interface UserState {
-  user: User | null
-  isLoading: boolean
-  setUser: (user: User | null) => void
-  logout: () => void
-}
+features/user/
 
-export const useUserStore = create<UserState>((set) => ({
-  user: null,
-  isLoading: false,
-  setUser: (user) => set({ user }),
-  logout: () => set({ user: null }),
-}))
-```
+index.ts
+api.ts
+types.ts
+schema.ts
+store.ts
+components/
+hooks/
 
-#### React Query 规范
+AI must always follow this structure.
 
-```typescript
-// hooks/use-users.ts
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+---
 
-// 查询
-export function useUsers() {
-  return useQuery({
-    queryKey: ["users"],
-    queryFn: fetchUsers,
-  })
-}
+# API Rules
 
-// 修改
-export function useCreateUser() {
-  const queryClient = useQueryClient()
-  
-  return useMutation({
-    mutationFn: createUser,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] })
-    },
-  })
-}
-```
+All API must:
 
-### 表单处理
+- use Axios instance
+- defined in features/*/api.ts
+- never call axios directly in components
 
-#### React Hook Form + Zod
+Bad:
 
-```tsx
-"use client"
+useEffect(() => axios.get())
 
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+Good:
 
-const formSchema = z.object({
-  email: z.string().email("请输入有效的邮箱地址"),
-  password: z.string().min(6, "密码至少6位"),
-})
+useUserList()
 
-type FormData = z.infer<typeof formSchema>
+---
 
-export function LoginForm() {
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  })
+# Zustand Rules
 
-  const onSubmit = async (data: FormData) => {
-    // 处理提交
-  }
+Store location:
 
-  return (
-    <form onSubmit={form.handleSubmit(onSubmit)}>
-      <Input {...form.register("email")} />
-      {form.formState.errors.email && (
-        <span>{form.formState.errors.email.message}</span>
-      )}
-      <Button type="submit">登录</Button>
-    </form>
-  )
-}
-```
+store/
+or
+features/*/store.ts
 
-### HTTP 请求
+Rules:
 
-#### Axios 封装规范
+- no business logic in components
+- use selector
+- no inline store
 
-```typescript
-// lib/request.ts
-import axios from "axios"
+---
 
-export const request = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
-  timeout: 10000,
-})
+# Form Rules
 
-// 请求拦截器
-request.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token")
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  return config
-})
+Forms must use:
 
-// 响应拦截器
-request.interceptors.response.use(
-  (response) => response.data,
-  (error) => {
-    if (error.response?.status === 401) {
-      // 处理未授权
-    }
-    return Promise.reject(error)
-  }
-)
-```
+react-hook-form
+zod
+shadcn form components
 
-## 可用脚本
+Structure:
 
-```bash
-# 开发模式
-npm run dev
+schema.ts
+form.tsx
 
-# 构建
-npm run build
+---
 
-# 生产模式
-npm run start
+# UI Rules
 
-# 代码检查
-npm run lint
-```
+Prefer shadcn components:
 
-## 路径别名
+- Button
+- Input
+- Card
+- Dialog
+- Table
+- Dropdown
 
-```typescript
-// tsconfig.json 中配置的路径别名
-@/components    # src/components
-@/components/ui # src/components/ui
-@/lib           # src/lib
-@/hooks         # src/hooks
-```
+Icons:
 
-## 主题配置
+Use lucide-react only.
 
-项目使用 CSS 变量进行主题管理，支持亮色/暗色模式：
+---
 
-```css
-/* globals.css */
-:root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  /* ... */
-}
+# Styling Rules
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  /* ... */
-}
-```
+Only TailwindCSS.
 
-## 最佳实践
+Do not:
 
-1. **组件设计**: 优先使用 shadcn/ui 组件，保持一致的视觉风格
-2. **类型安全**: 所有 Props 和 API 响应都应定义 TypeScript 类型
-3. **状态分离**: 服务端状态用 React Query，客户端状态用 Zustand
-4. **表单验证**: 使用 Zod 进行运行时验证，配合 React Hook Form
-5. **错误处理**: 统一在 Axios 拦截器中处理 API 错误
-6. **性能优化**: 使用 React Compiler 自动优化渲染性能
+- write css files
+- use styled-components
+- inline style
 
-## 注意事项
+---
 
-- 本项目使用 Next.js App Router，页面组件默认是 Server Component
-- 需要客户端交互的组件需添加 `"use client"` 指令
-- Tailwind CSS 4 使用新的配置方式，通过 CSS 文件配置
-- shadcn/ui 组件使用 Radix UI 作为基础，提供完整的无障碍支持
+# Table Rules
+
+All tables must support:
+
+- loading
+- empty state
+- pagination
+- search (if needed)
+
+Use shadcn table.
+
+---
+
+# Dialog Rules
+
+All dialogs must:
+
+- controlled open state
+- form inside dialog
+- submit + cancel
+
+---
+
+# Code Style
+
+Always:
+
+- use arrow function
+- use const
+- no any
+- typed props
+- export default page
+- named export components
+
+---
+
+# Imports Order
+
+1 react
+2 next
+3 third libs
+4 ui
+5 hooks
+6 store
+7 types
+
+---
+
+# Do Not
+
+Do not:
+
+- create duplicate components
+- write inline axios
+- mix business logic
+- break folder structure
+- create new UI system
+
+AI must follow this strictly.
