@@ -24,14 +24,9 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Textarea } from "@/components/ui/textarea"
+import { formatBirthdayForDisplay } from "@/lib/format-birthday"
 
 import { addDatingTarget, updateDatingTarget } from "../api"
 import { useDatingTargetList } from "../hooks/useDatingTargetList"
@@ -73,7 +68,7 @@ const voToUpdateValues = (vo: DatingTargetVO): DatingTargetUpdateFormInput => {
   return {
     id: vo.id,
     name: vo.name ?? "",
-    birthday: i?.birthday ?? "",
+    birthday: formatBirthdayForDisplay(i?.birthday ?? undefined),
     hometown: i?.hometown ?? "",
     currentCity: i?.currentCity ?? "",
     height: i?.height ?? undefined,
@@ -134,36 +129,24 @@ const InfoRow = ({
   </div>
 )
 
+const tableText = (v: string | null | undefined) => {
+  const t = v?.trim()
+  return t && t.length > 0 ? t : "—"
+}
+
 export const DatingTargetsPanel = () => {
   const { list, loading, error, refetch } = useDatingTargetList()
   const [nameFilter, setNameFilter] = useState("")
-  const [cityFilter, setCityFilter] = useState("all")
   const [page, setPage] = useState(1)
 
   const [createOpen, setCreateOpen] = useState(false)
   const [detailTarget, setDetailTarget] = useState<DatingTargetVO | null>(null)
   const [editTarget, setEditTarget] = useState<DatingTargetVO | null>(null)
 
-  const cityOptions = useMemo(() => {
-    const set = new Set<string>()
-    for (const row of list) {
-      const c = row.info?.currentCity?.trim()
-      if (c) set.add(c)
-    }
-    return [...set].sort((a, b) => a.localeCompare(b, "zh-CN"))
-  }, [list])
-
   const filtered = useMemo(() => {
     const q = nameFilter.trim().toLowerCase()
-    return list.filter((row) => {
-      const nameOk =
-        !q || row.name.toLowerCase().includes(q)
-      const city = row.info?.currentCity?.trim() ?? ""
-      const cityOk =
-        cityFilter === "all" || city === cityFilter
-      return nameOk && cityOk
-    })
-  }, [list, nameFilter, cityFilter])
+    return list.filter((row) => !q || row.name.toLowerCase().includes(q))
+  }, [list, nameFilter])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const safePage = Math.min(page, totalPages)
@@ -244,30 +227,6 @@ export const DatingTargetsPanel = () => {
               }}
             />
           </div>
-          <div className="flex flex-col gap-2 w-full sm:w-64">
-            <span id="dating-filter-city-label" className="text-sm font-medium">
-              现居
-            </span>
-            <Select
-              value={cityFilter}
-              onValueChange={(value) => {
-                setCityFilter(value)
-                setPage(1)
-              }}
-            >
-              <SelectTrigger aria-labelledby="dating-filter-city-label">
-                <SelectValue placeholder="选择城市" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全部</SelectItem>
-                {cityOptions.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
         </div>
         <Button type="button" onClick={openCreate}>
           创建人物
@@ -300,17 +259,20 @@ export const DatingTargetsPanel = () => {
                 <TableRow>
                   <TableHead>姓名</TableHead>
                   <TableHead>生日</TableHead>
+                  <TableHead>身高</TableHead>
+                  <TableHead>体重</TableHead>
                   <TableHead>星座</TableHead>
+                  <TableHead>本科学校</TableHead>
+                  <TableHead>硕士学校</TableHead>    
+                  <TableHead>公司</TableHead>
                   <TableHead>职业</TableHead>
-                  <TableHead>现居</TableHead>
-                  <TableHead>手机</TableHead>
                   <TableHead className="text-right">操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
+                    <TableCell colSpan={10} className="h-24 text-center">
                       <span className="inline-flex items-center gap-2 text-muted-foreground">
                         <Loader2Icon className="size-4 animate-spin" />
                         加载中…
@@ -320,7 +282,7 @@ export const DatingTargetsPanel = () => {
                 ) : pageSlice.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={7}
+                      colSpan={10}
                       className="h-24 text-center text-muted-foreground"
                     >
                       暂无数据
@@ -332,11 +294,46 @@ export const DatingTargetsPanel = () => {
                     return (
                       <TableRow key={row.id}>
                         <TableCell className="font-medium">{row.name}</TableCell>
-                        <TableCell>{i?.birthday ?? "—"}</TableCell>
+                        <TableCell>
+                          {formatBirthdayForDisplay(i?.birthday ?? undefined) ||
+                            "—"}
+                        </TableCell>
+                        <TableCell>
+                          {i?.height !== undefined && i?.height !== null
+                            ? `${i.height} cm`
+                            : "—"}
+                        </TableCell>
+                        <TableCell>
+                          {i?.weight !== undefined && i?.weight !== null
+                            ? `${i.weight} kg`
+                            : "—"}
+                        </TableCell>
                         <TableCell>{i?.constellation ?? "—"}</TableCell>
+                        <TableCell
+                          className="max-w-[8rem]"
+                          title={i?.undergraduateSchool ?? undefined}
+                        >
+                          <span className="line-clamp-2">
+                            {tableText(i?.undergraduateSchool ?? undefined)}
+                          </span>
+                        </TableCell>
+                        <TableCell
+                          className="max-w-[8rem]"
+                          title={i?.graduateSchool ?? undefined}
+                        >
+                          <span className="line-clamp-2">
+                            {tableText(i?.graduateSchool ?? undefined)}
+                          </span>
+                        </TableCell>
+                        <TableCell
+                          className="max-w-[8rem]"
+                          title={i?.company ?? undefined}
+                        >
+                          <span className="line-clamp-2">
+                            {tableText(i?.company ?? undefined)}
+                          </span>
+                        </TableCell>
                         <TableCell>{i?.job ?? "—"}</TableCell>
-                        <TableCell>{i?.currentCity ?? "—"}</TableCell>
-                        <TableCell>{i?.phone ?? "—"}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2 flex-wrap">
                             <Button
@@ -401,7 +398,7 @@ export const DatingTargetsPanel = () => {
       </Card>
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>创建人物</DialogTitle>
             <DialogDescription>
@@ -515,6 +512,45 @@ export const DatingTargetsPanel = () => {
               />
               <FormField
                 control={createForm.control}
+                name="company"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>公司</FormLabel>
+                    <FormControl>
+                      <Input placeholder="公司" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={createForm.control}
+                name="undergraduateSchool"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>本科学校</FormLabel>
+                    <FormControl>
+                      <Input placeholder="本科学校" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={createForm.control}
+                name="graduateSchool"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>硕士学校</FormLabel>
+                    <FormControl>
+                      <Input placeholder="硕士学校" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={createForm.control}
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
@@ -534,6 +570,91 @@ export const DatingTargetsPanel = () => {
                     <FormLabel>微信</FormLabel>
                     <FormControl>
                       <Input placeholder="微信号" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={createForm.control}
+                name="strength"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>强项</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="强项"
+                        className="min-h-20 resize-y"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={createForm.control}
+                name="weakness"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>弱点</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="弱点"
+                        className="min-h-20 resize-y"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={createForm.control}
+                name="loveView"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>爱情观</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="爱情观"
+                        className="min-h-20 resize-y"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={createForm.control}
+                name="moneyView"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>消费观</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="消费观"
+                        className="min-h-20 resize-y"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={createForm.control}
+                name="valueView"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>价值观</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="价值观"
+                        className="min-h-20 resize-y"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -574,7 +695,7 @@ export const DatingTargetsPanel = () => {
           if (!open) setEditTarget(null)
         }}
       >
-        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>编辑人物</DialogTitle>
             <DialogDescription>
@@ -689,6 +810,45 @@ export const DatingTargetsPanel = () => {
               />
               <FormField
                 control={editForm.control}
+                name="company"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>公司</FormLabel>
+                    <FormControl>
+                      <Input placeholder="公司" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="undergraduateSchool"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>本科学校</FormLabel>
+                    <FormControl>
+                      <Input placeholder="本科学校" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="graduateSchool"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>硕士学校</FormLabel>
+                    <FormControl>
+                      <Input placeholder="硕士学校" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
@@ -708,6 +868,91 @@ export const DatingTargetsPanel = () => {
                     <FormLabel>微信</FormLabel>
                     <FormControl>
                       <Input placeholder="微信号" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="strength"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>强项</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="强项"
+                        className="min-h-20 resize-y"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="weakness"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>弱点</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="弱点"
+                        className="min-h-20 resize-y"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="loveView"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>爱情观</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="爱情观"
+                        className="min-h-20 resize-y"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="moneyView"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>消费观</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="消费观"
+                        className="min-h-20 resize-y"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="valueView"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>价值观</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="价值观"
+                        className="min-h-20 resize-y"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -748,7 +993,7 @@ export const DatingTargetsPanel = () => {
           if (!open) setDetailTarget(null)
         }}
       >
-        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>人物详情</DialogTitle>
             <DialogDescription>
@@ -769,7 +1014,11 @@ export const DatingTargetsPanel = () => {
               />
               <InfoRow
                 label="生日"
-                value={detailTarget.info?.birthday ?? undefined}
+                value={
+                  formatBirthdayForDisplay(
+                    detailTarget.info?.birthday ?? undefined
+                  ) || undefined
+                }
               />
               <InfoRow
                 label="星座"
@@ -817,6 +1066,38 @@ export const DatingTargetsPanel = () => {
               <InfoRow
                 label="职业"
                 value={detailTarget.info?.job ?? undefined}
+              />
+              <InfoRow
+                label="公司"
+                value={detailTarget.info?.company ?? undefined}
+              />
+              <InfoRow
+                label="本科学校"
+                value={detailTarget.info?.undergraduateSchool ?? undefined}
+              />
+              <InfoRow
+                label="硕士学校"
+                value={detailTarget.info?.graduateSchool ?? undefined}
+              />
+              <InfoRow
+                label="强项"
+                value={detailTarget.info?.strength ?? undefined}
+              />
+              <InfoRow
+                label="弱点"
+                value={detailTarget.info?.weakness ?? undefined}
+              />
+              <InfoRow
+                label="爱情观"
+                value={detailTarget.info?.loveView ?? undefined}
+              />
+              <InfoRow
+                label="消费观"
+                value={detailTarget.info?.moneyView ?? undefined}
+              />
+              <InfoRow
+                label="价值观"
+                value={detailTarget.info?.valueView ?? undefined}
               />
               <InfoRow
                 label="手机"
