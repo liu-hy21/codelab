@@ -19,10 +19,11 @@ export const PRISM_TABS: ReadonlyArray<{ key: PrismTabKey; label: string }> = [
   { key: "trend", label: "走势看板" },
   { key: "metrics", label: "指标看板" },
   { key: "positions", label: "标的与仓位" },
+  { key: "wisdom", label: "交易智慧" },
 ]
 
 export const isChartRange = (v: string | null): v is ChartRange =>
   v === "1w" || v === "1y" || v === "3y"
 
 export const isPrismTabKey = (v: string | null): v is PrismTabKey =>
-  v === "trend" || v === "metrics" || v === "positions"
+  v === "trend" || v === "metrics" || v === "positions" || v === "wisdom"

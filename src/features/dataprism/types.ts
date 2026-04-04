@@ -1,6 +1,32 @@
+/** 与后端 CommonResponse 对齐（数据棱镜交易智慧等模块） */
+export interface CommonResponse<T> {
+  success: boolean
+  code: number
+  msg: string
+  data: T
+}
+
+/** 交易智慧 · TradeWisdomVO */
+export type TradeWisdomVO = {
+  id: number
+  content: string
+  author: string
+  tag: string
+}
+
+export type TradeWisdomAddRequest = {
+  content: string
+  author?: string
+  tag?: string
+}
+
+export type TradeWisdomUpdateRequest = TradeWisdomAddRequest & {
+  id: number
+}
+
 export type ChartRange = "1w" | "1y" | "3y"
 
-export type PrismTabKey = "trend" | "metrics" | "positions"
+export type PrismTabKey = "trend" | "metrics" | "positions" | "wisdom"
 
 export type MarketCode = "CN" | "HK" | "US"
 

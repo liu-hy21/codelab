@@ -8,6 +8,7 @@ import type { ChartRange, PrismTabKey } from "../types"
 import { MetricsBoardPanel } from "./metrics-board-panel"
 import { PositionsBoardPanel } from "./positions-board-panel"
 import { PrismSignalBell } from "./prism-signal-bell"
+import { TradeWisdomPanel } from "./trade-wisdom-panel"
 import { TrendBoardPanel } from "./trend-board-panel"
 
 const DEFAULT_TAB: PrismTabKey = "trend"
@@ -127,6 +128,16 @@ export const DataPrismView = () => {
           aria-labelledby={`${tabListId}-positions`}
         >
           <PositionsBoardPanel />
+        </div>
+      ) : null}
+
+      {activeTab === "wisdom" ? (
+        <div
+          role="tabpanel"
+          id={`${tabListId}-wisdom-panel`}
+          aria-labelledby={`${tabListId}-wisdom`}
+        >
+          <TradeWisdomPanel />
         </div>
       ) : null}
     </div>
