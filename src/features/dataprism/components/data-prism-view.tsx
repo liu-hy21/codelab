@@ -3,14 +3,10 @@
 import { useCallback, useId, useMemo } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { cn } from "@/lib/utils"
-import {
-  CHART_RANGE_DESCRIPTION,
-  isChartRange,
-  isPrismTabKey,
-  PRISM_TABS,
-} from "../constants"
+import { isChartRange, isPrismTabKey, PRISM_TABS } from "../constants"
 import type { ChartRange, PrismTabKey } from "../types"
-import { PrismPlaceholderPanel } from "./prism-placeholder-panel"
+import { MetricsBoardPanel } from "./metrics-board-panel"
+import { PositionsBoardPanel } from "./positions-board-panel"
 import { PrismSignalBell } from "./prism-signal-bell"
 import { TrendBoardPanel } from "./trend-board-panel"
 
@@ -120,10 +116,7 @@ export const DataPrismView = () => {
           id={`${tabListId}-metrics-panel`}
           aria-labelledby={`${tabListId}-metrics`}
         >
-          <PrismPlaceholderPanel
-            title="指标看板"
-            description="指数回撤、监控列表与分市场占比等（待接入后端）"
-          />
+          <MetricsBoardPanel />
         </div>
       ) : null}
 
@@ -133,10 +126,7 @@ export const DataPrismView = () => {
           id={`${tabListId}-positions-panel`}
           aria-labelledby={`${tabListId}-positions`}
         >
-          <PrismPlaceholderPanel
-            title="标的与仓位"
-            description="标的池、标签与持仓快照（待接入后端）"
-          />
+          <PositionsBoardPanel />
         </div>
       ) : null}
     </div>
