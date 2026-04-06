@@ -3,13 +3,16 @@
 import { useId, useState } from "react"
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { DatingChatPanel } from "@/features/dating/components/dating-chat-panel"
 import { DatingTargetsPanel } from "@/features/dating/components/dating-targets-panel"
 import { TalkWisdomPanel } from "@/features/dating/components/talk-wisdom-panel"
+import type { DatingTargetVO } from "@/features/dating/types"
 
-const TABS = ["人物数据", "AI决策", "交流智慧"] as const
+const TABS = ["人物数据", "AI决策", "交流智慧", "聊天"] as const
 
 export default function ChatPage() {
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("人物数据")
+  const [chatTarget, setChatTarget] = useState<DatingTargetVO | null>(null)
   const tabListId = useId()
 
   return (
@@ -61,7 +64,12 @@ export default function ChatPage() {
             id={`${tabListId}-人物数据-panel`}
             aria-labelledby={`${tabListId}-人物数据`}
           >
-            <DatingTargetsPanel />
+            <DatingTargetsPanel
+              onOpenChatEntry={(target) => {
+                setChatTarget(target)
+                setActiveTab("聊天")
+              }}
+            />
           </div>
         ) : null}
 
@@ -90,6 +98,21 @@ export default function ChatPage() {
             aria-labelledby={`${tabListId}-交流智慧`}
           >
             <TalkWisdomPanel />
+          </div>
+        ) : null}
+
+        {activeTab === "聊天" ? (
+          <div
+            role="tabpanel"
+            id={`${tabListId}-聊天-panel`}
+            aria-labelledby={`${tabListId}-聊天`}
+          >
+            <DatingChatPanel
+              target={chatTarget}
+              onSaved={(updatedTarget) => {
+                setChatTarget(updatedTarget)
+              }}
+            />
           </div>
         ) : null}
       </div>

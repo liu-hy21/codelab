@@ -53,3 +53,20 @@ export const talkWisdomMutateSchema = z.object({
 })
 
 export type TalkWisdomMutateValues = z.infer<typeof talkWisdomMutateSchema>
+
+export const datingChatRecordEntrySchema = z.object({
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "日期格式必须为 yyyy-MM-dd"),
+  role: z.enum(["我", "她"]),
+  content: z.string().min(1, "内容不能为空"),
+})
+
+export const datingChatRecordEntryFormSchema = datingChatRecordEntrySchema.extend({
+  content: z.string().min(1, "内容不能为空").max(5000, "内容过长"),
+})
+
+export type DatingChatRecordEntry = z.infer<typeof datingChatRecordEntrySchema>
+export type DatingChatRecordEntryFormValues = z.infer<
+  typeof datingChatRecordEntryFormSchema
+>

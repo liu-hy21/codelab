@@ -41,6 +41,10 @@ import type { DatingTargetAddRequest, DatingTargetVO } from "../types"
 
 const PAGE_SIZE = 10
 
+type DatingTargetsPanelProps = {
+  onOpenChatEntry?: (target: DatingTargetVO) => void
+}
+
 const emptyFormValues = (): DatingTargetFormInput => ({
   name: "",
   birthday: "",
@@ -134,7 +138,7 @@ const tableText = (v: string | null | undefined) => {
   return t && t.length > 0 ? t : "—"
 }
 
-export const DatingTargetsPanel = () => {
+export const DatingTargetsPanel = ({ onOpenChatEntry }: DatingTargetsPanelProps) => {
   const { list, loading, error, refetch } = useDatingTargetList()
   const [nameFilter, setNameFilter] = useState("")
   const [page, setPage] = useState(1)
@@ -336,6 +340,14 @@ export const DatingTargetsPanel = () => {
                         <TableCell>{i?.job ?? "—"}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2 flex-wrap">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => onOpenChatEntry?.(row)}
+                            >
+                              录入聊天
+                            </Button>
                             <Button
                               type="button"
                               size="sm"

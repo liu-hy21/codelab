@@ -2,6 +2,7 @@ import request from "@/lib/request"
 import type {
   CommonResponse,
   DatingTargetAddRequest,
+  DatingTargetChatRecordUpdateRequest,
   DatingTargetUpdateRequest,
   DatingTargetVO,
   TalkWisdomAddRequest,
@@ -44,6 +45,16 @@ export const updateDatingTarget = async (
 ): Promise<DatingTargetVO> => {
   const res = await request.post<CommonResponse<DatingTargetVO>>(
     "/dating/update",
+    body
+  )
+  return unwrap(res)
+}
+
+export const updateDatingTargetChatRecord = async (
+  body: DatingTargetChatRecordUpdateRequest
+): Promise<DatingTargetVO> => {
+  const res = await request.post<CommonResponse<DatingTargetVO>>(
+    "/dating/chatRecord/update",
     body
   )
   return unwrap(res)

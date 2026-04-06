@@ -63,6 +63,11 @@ export interface DatingTargetUpdateRequest extends DatingTargetAddRequest {
   id: number
 }
 
+export interface DatingTargetChatRecordUpdateRequest {
+  id: number
+  chatRecord: string
+}
+
 export interface TalkWisdomVO {
   id: number
   content: string
