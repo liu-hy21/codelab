@@ -1,6 +1,6 @@
-# 数据棱镜 · 交易智慧接口说明
+# 数据棱镜 · 交易接口说明
 
-面向前端的 HTTP 约定如下。后端控制器为 `TradeController`，路由前缀 **`/trade`**。应用已配置 **`server.servlet.context-path: /codelab`**，下列路径均需加此前缀。
+面向前端的 HTTP 约定如下。后端控制器为 `TradeController`，路由前缀 **`/trade`**（含交易智慧语录、标的配置两类能力）。应用已配置 **`server.servlet.context-path: /codelab`**，下列路径均需加此前缀。
 
 **Base URL 示例**：`http://<主机>:9001/codelab`
 
@@ -27,6 +27,25 @@
 | 列表/详情返回 | `TradeWisdomVO` |
 | 新增请求 | `TradeWisdomAddRequest` |
 | 编辑请求 | `TradeWisdomUpdateRequest` |
+
+### 库表 `trade_target`（标的配置）
+
+| 列 | 说明 |
+|----|------|
+| id | 主键，自增 |
+| code | 标的代号/代码 |
+| cn_name | 标的中文名 |
+| market | 所属市场（如：沪深、港股、美股、期货） |
+
+### 与代码对应关系（标的）
+
+| 概念 | 类名 |
+|------|------|
+| 表映射 | `TradeTargetDO` |
+| 列表/详情返回 | `TradeTargetVO` |
+| 列表查询（筛选） | `TradeTargetQueryRequest` |
+| 新增请求 | `TradeTargetAddRequest` |
+| 编辑请求 | `TradeTargetUpdateRequest` |
 
 ---
 
@@ -176,7 +195,96 @@
 
 ---
 
+## 4. 标的配置列表（带筛选）
+
+- **方法**：`POST`
+- **路径**：`/trade/target/query`
+- **完整路径**：`/codelab/trade/target/query`
+- **请求体**：`TradeTargetQueryRequest`（**所有字段可选**；均为空则返回全部记录）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| code | string | 标的代码，**模糊**匹配（`LIKE`） |
+| cnName | string | 中文名，**模糊**匹配（`LIKE`） |
+| market | string | 所属市场，**精确**匹配（`=`） |
+
+**说明**：结果按主键 `id` **降序**排列。
+
+**请求示例**（按市场筛选）：
+
+```json
+{
+  "code": "",
+  "cnName": "",
+  "market": "沪深"
+}
+```
+
+**请求示例**（无条件拉全量，传空对象即可）：
+
+```json
+{}
+```
+
+**响应 `data` 类型**：`TradeTargetVO[]`
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | number | 主键 |
+| code | string | 标的代码 |
+| cnName | string | 中文名 |
+| market | string | 所属市场 |
+
+---
+
+## 5. 新增标的配置
+
+- **方法**：`POST`
+- **路径**：`/trade/target/add`
+- **完整路径**：`/codelab/trade/target/add`
+- **请求体**：`TradeTargetAddRequest`
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| code | string | **是** | 标的代号/代码 |
+| cnName | string | **是** | 标的中文名 |
+| market | string | **是** | 所属市场 |
+
+**请求示例**：
+
+```json
+{
+  "code": "600519",
+  "cnName": "贵州茅台",
+  "market": "沪深"
+}
+```
+
+**响应 `data` 类型**：`TradeTargetVO`（含新生成的 `id`）
+
+---
+
+## 6. 编辑标的配置
+
+- **方法**：`POST`
+- **路径**：`/trade/target/update`
+- **完整路径**：`/codelab/trade/target/update`
+- **请求体**：`TradeTargetUpdateRequest`
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| id | number | **是** | 主键 |
+| code | string | **是** | 标的代号/代码 |
+| cnName | string | **是** | 标的中文名 |
+| market | string | **是** | 所属市场 |
+
+**业务错误**：`id` 不存在时，`msg` 为 `记录不存在`。
+
+---
+
 ## 前端调用备忘
+
+### 交易智慧语录
 
 | 接口 | Method | Path（相对 context-path） |
 |------|--------|---------------------------|
@@ -184,4 +292,12 @@
 | 新增 | POST | `/trade/add` |
 | 编辑 | POST | `/trade/update` |
 
-若项目已集成 Springfox Swagger，可在 **`/codelab/swagger-ui.html`**（以实际 `Docket` 配置为准）中查看 **「交易智慧接口」** 分组。
+### 标的配置
+
+| 接口 | Method | Path（相对 context-path） |
+|------|--------|---------------------------|
+| 列表（筛选） | POST | `/trade/target/query` |
+| 新增 | POST | `/trade/target/add` |
+| 编辑 | POST | `/trade/target/update` |
+
+若项目已集成 Springfox Swagger，可在 **`/codelab/swagger-ui.html`**（以实际 `Docket` 配置为准）中查看 **「交易接口」** 分组。

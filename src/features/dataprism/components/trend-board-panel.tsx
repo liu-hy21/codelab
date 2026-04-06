@@ -17,7 +17,7 @@ export const TrendBoardPanel = ({
   range,
   onRangeChange,
 }: TrendBoardPanelProps) => {
-  const { loading, series } = usePrismChartData(range)
+  const { loading, series, error, targetCodeCount } = usePrismChartData(range)
   const headingId = useId()
   const rangeSelectId = useId()
 
@@ -45,14 +45,32 @@ export const TrendBoardPanel = ({
             onChange={onRangeChange}
           />
         </div>
-        <p className="text-muted-foreground max-w-prose text-sm text-pretty">
-          {CHART_RANGE_DESCRIPTION[range]}
-        </p>
+        <div className="text-muted-foreground max-w-prose space-y-1 text-sm text-pretty">
+          <p>{CHART_RANGE_DESCRIPTION[range]}</p>
+          <p className="text-xs">
+            展示标的与顺序来自「标的配置」全量列表的{" "}
+            <span className="font-mono">code</span>
+            ，与走势接口返回的 symbol（去后缀）匹配。每个自然日仅拉取一次近三年数据至本地缓存，切换周期不重复请求。
+          </p>
+        </div>
       </div>
 
       <p className="sr-only" aria-live="polite" aria-atomic="true">
-        {loading ? "走势图加载中…" : `已加载 ${series.length} 个品种`}
+        {loading
+          ? "走势图加载中…"
+          : error
+            ? `加载失败：${error}`
+            : `已加载 ${series.length} 个品种`}
       </p>
+
+      {error ? (
+        <div
+          role="alert"
+          className="border-destructive/50 bg-destructive/5 text-destructive rounded-lg border px-4 py-3 text-sm"
+        >
+          {error}
+        </div>
+      ) : null}
 
       {loading ? (
         <div
@@ -62,7 +80,16 @@ export const TrendBoardPanel = ({
           <Loader2Icon className="size-5 animate-spin" aria-hidden="true" />
           <span>加载走势图…</span>
         </div>
-      ) : (
+      ) : !error && series.length === 0 ? (
+        <div
+          className="text-muted-foreground flex min-h-[240px] items-center justify-center rounded-lg border border-dashed px-4 text-center text-sm"
+          role="status"
+        >
+          {targetCodeCount === 0
+            ? "标的配置中暂无有效 code，请先在「标的配置」页签添加标的。"
+            : "走势数据中未匹配到已配置的 code，请确认标的代码与 yfinance 品种一致。"}
+        </div>
+      ) : !error ? (
         <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {series.map(({ instrument, points }) => (
             <li key={instrument.id} className="min-w-0">
@@ -74,7 +101,7 @@ export const TrendBoardPanel = ({
             </li>
           ))}
         </ul>
-      )}
+      ) : null}
     </section>
   )
 }

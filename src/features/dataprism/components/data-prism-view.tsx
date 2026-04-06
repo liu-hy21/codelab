@@ -8,11 +8,12 @@ import type { ChartRange, PrismTabKey } from "../types"
 import { MetricsBoardPanel } from "./metrics-board-panel"
 import { PositionsBoardPanel } from "./positions-board-panel"
 import { PrismSignalBell } from "./prism-signal-bell"
+import { TradeTargetPanel } from "./trade-target-panel"
 import { TradeWisdomPanel } from "./trade-wisdom-panel"
 import { TrendBoardPanel } from "./trend-board-panel"
 
 const DEFAULT_TAB: PrismTabKey = "trend"
-const DEFAULT_RANGE: ChartRange = "1w"
+const DEFAULT_RANGE: ChartRange = "1M"
 
 export const DataPrismView = () => {
   const router = useRouter()
@@ -138,6 +139,16 @@ export const DataPrismView = () => {
           aria-labelledby={`${tabListId}-wisdom`}
         >
           <TradeWisdomPanel />
+        </div>
+      ) : null}
+
+      {activeTab === "targets" ? (
+        <div
+          role="tabpanel"
+          id={`${tabListId}-targets-panel`}
+          aria-labelledby={`${tabListId}-targets`}
+        >
+          <TradeTargetPanel />
         </div>
       ) : null}
     </div>

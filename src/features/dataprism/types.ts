@@ -24,9 +24,43 @@ export type TradeWisdomUpdateRequest = TradeWisdomAddRequest & {
   id: number
 }
 
-export type ChartRange = "1w" | "1y" | "3y"
+/** 标的配置 · TradeTargetVO（后端 `/trade/target/*`） */
+export type TradeTargetVO = {
+  id: number
+  code: string
+  cnName: string
+  market: string
+}
 
-export type PrismTabKey = "trend" | "metrics" | "positions" | "wisdom"
+/** 列表筛选：字段均可选；均为空则返回全部 */
+export type TradeTargetQueryRequest = {
+  code?: string
+  cnName?: string
+  market?: string
+}
+
+export type TradeTargetAddRequest = {
+  code: string
+  cnName: string
+  market: string
+}
+
+export type TradeTargetUpdateRequest = TradeTargetAddRequest & {
+  id: number
+}
+
+/**
+ * 与走势看板后端 `GET /api/v1/chart/series?range=` 一致。
+ * `3Y`：近三年全量，前端每日最多请求一次并缓存，其它周期由此切片。
+ */
+export type ChartRange = "1W" | "1M" | "3M" | "6M" | "1Y" | "YTD" | "3Y"
+
+export type PrismTabKey =
+  | "trend"
+  | "metrics"
+  | "positions"
+  | "wisdom"
+  | "targets"
 
 export type MarketCode = "CN" | "HK" | "US"
 
@@ -45,6 +79,11 @@ export type InstrumentMeta = {
 export type InstrumentSeries = {
   instrument: InstrumentMeta
   points: ChartPoint[]
+}
+
+/** `GET /api/v1/chart/series` 响应体 */
+export type ChartSeriesResponse = {
+  series: InstrumentSeries[]
 }
 
 /** 指标看板：标普 / 纳指摘要（演示数据） */

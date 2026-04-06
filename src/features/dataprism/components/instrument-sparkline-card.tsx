@@ -124,7 +124,7 @@ export const InstrumentSparklineCard = ({
           </div>
         )}
         <p className="text-muted-foreground mt-2 text-xs" aria-hidden="true">
-          纵轴：收盘价（演示数据）
+          纵轴：收盘价
         </p>
       </CardContent>
     </Card>

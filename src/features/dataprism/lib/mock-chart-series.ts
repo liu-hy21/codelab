@@ -26,14 +26,22 @@ function mulberry32(seed: number) {
 
 function tradingDayCount(range: ChartRange): number {
   switch (range) {
-    case "1w":
+    case "1W":
       return 7
-    case "1y":
-      return 90
-    case "3y":
+    case "1M":
+      return 22
+    case "3M":
+      return 66
+    case "6M":
+      return 130
+    case "1Y":
       return 120
+    case "YTD":
+      return 90
+    case "3Y":
+      return 200
     default:
-      return 7
+      return 22
   }
 }
 
