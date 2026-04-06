@@ -23,6 +23,19 @@ export const CHART_RANGE_DESCRIPTION: Record<ChartRange, string> = {
   "3Y": "近三年全量（每个自然日仅拉取一次并写入本地缓存）",
 }
 
+/** 走势看板：按 `instrument.symbol` 匹配，固定排在列表最前（自上而下第一行优先占满） */
+export const PRISM_TREND_PINNED_SYMBOLS: readonly string[] = [
+  "SPX",
+  "IXIC",
+  "513180",
+  "518880",
+]
+
+export const isPinnedTrendSymbol = (symbol: string): boolean => {
+  const s = symbol.trim()
+  return PRISM_TREND_PINNED_SYMBOLS.some((p) => p === s)
+}
+
 export const PRISM_TABS: ReadonlyArray<{ key: PrismTabKey; label: string }> = [
   { key: "trend", label: "走势看板" },
   { key: "metrics", label: "指标看板" },

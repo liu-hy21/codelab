@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from "react"
 import { fetchChartSeries } from "../api/chart-series"
 import { fetchTradeTargetList } from "../api/trade-target"
+import { PRISM_TREND_PINNED_SYMBOLS } from "../constants"
 import { loadChartCache, saveChartCache } from "../lib/chart-cache"
 import {
-  filterSeriesByDisplaySymbols,
+  filterSeriesByTargetCodes,
   orderedCodesFromTargets,
+  reorderSeriesWithPinnedSymbols,
   sliceSeriesByRange,
+  sortTailByMarketUsHkCn,
 } from "../lib/slice-chart-series"
 import type { ChartRange, InstrumentSeries } from "../types"
 
@@ -20,7 +23,7 @@ type State = {
 
 /**
  * 每个自然日最多请求一次 `range=3Y` 走势图并本地缓存；
- * 展示标的来自「标的配置」全量列表的 `code`（与走势 `symbol` 规范化后匹配）。
+ * 展示标的来自「标的配置」全量列表的 `code`（与走势 `instrument.id` trim 后相等即匹配）。
  */
 export const usePrismChartData = (range: ChartRange): State => {
   const [baseSeries, setBaseSeries] = useState<InstrumentSeries[] | null>(
@@ -50,9 +53,12 @@ export const usePrismChartData = (range: ChartRange): State => {
         const orderedCodes = orderedCodesFromTargets(
           targets.map((t) => t.code)
         )
-        const filtered = filterSeriesByDisplaySymbols(
-          chartPayload.series,
-          orderedCodes
+        const filtered = sortTailByMarketUsHkCn(
+          reorderSeriesWithPinnedSymbols(
+            filterSeriesByTargetCodes(chartPayload.series, orderedCodes),
+            PRISM_TREND_PINNED_SYMBOLS
+          ),
+          PRISM_TREND_PINNED_SYMBOLS
         )
         setTargetCodeCount(orderedCodes.length)
         setBaseSeries(filtered)

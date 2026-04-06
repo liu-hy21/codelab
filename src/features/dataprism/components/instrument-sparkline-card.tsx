@@ -10,9 +10,13 @@ import {
 } from "recharts"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { cn } from "@/lib/utils"
 import { usePrefersReducedMotion } from "../hooks/use-prefers-reduced-motion"
+import {
+  CHART_RANGE_DESCRIPTION,
+  isPinnedTrendSymbol,
+} from "../constants"
 import type { ChartPoint, ChartRange, InstrumentMeta } from "../types"
-import { CHART_RANGE_DESCRIPTION } from "../constants"
 
 const marketLabel: Record<InstrumentMeta["market"], string> = {
   CN: "A 股",
@@ -30,6 +34,16 @@ const priceFmt = new Intl.NumberFormat("zh-CN", {
   maximumFractionDigits: 2,
 })
 
+/** 纵轴 / 提示：≥1000 用 k（如 6352 → 6.35k） */
+const formatChartPriceCompact = (v: number): string => {
+  const n = Number(v)
+  if (!Number.isFinite(n)) return ""
+  if (Math.abs(n) >= 1000) {
+    return `${(n / 1000).toFixed(2)}k`
+  }
+  return priceFmt.format(n)
+}
+
 type InstrumentSparklineCardProps = {
   instrument: InstrumentMeta
   points: ChartPoint[]
@@ -42,10 +56,17 @@ export const InstrumentSparklineCard = ({
   range,
 }: InstrumentSparklineCardProps) => {
   const reduceMotion = usePrefersReducedMotion()
+  const pinned = isPinnedTrendSymbol(instrument.symbol)
   const summary = `${instrument.symbol}，${CHART_RANGE_DESCRIPTION[range]}，纵轴为收盘价，共 ${points.length} 个数据点`
 
   return (
-    <Card className="flex min-w-0 flex-col overflow-hidden">
+    <Card
+      className={cn(
+        "flex min-w-0 flex-col overflow-hidden",
+        pinned &&
+          "border-2 border-primary bg-primary/[0.07] shadow-sm ring-2 ring-primary/35 dark:bg-primary/15"
+      )}
+    >
       <CardHeader className="space-y-2 pb-2">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           <CardTitle className="truncate text-base font-semibold tabular-nums">
@@ -88,11 +109,11 @@ export const InstrumentSparklineCard = ({
                 />
                 <YAxis
                   domain={["auto", "auto"]}
-                  width={44}
+                  width={52}
                   tick={{ fontSize: 10 }}
                   tickLine={false}
                   axisLine={{ stroke: "var(--border)" }}
-                  tickFormatter={(v) => priceFmt.format(Number(v))}
+                  tickFormatter={(v) => formatChartPriceCompact(Number(v))}
                 />
                 <Tooltip
                   contentStyle={{
@@ -106,7 +127,7 @@ export const InstrumentSparklineCard = ({
                     }).format(new Date(`${label}T12:00:00`))
                   }
                   formatter={(val) => [
-                    priceFmt.format(Number(val)),
+                    formatChartPriceCompact(Number(val)),
                     "收盘",
                   ]}
                 />

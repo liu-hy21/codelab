@@ -1,17 +1,23 @@
-import type { ChartPoint, ChartRange, InstrumentSeries } from "../types"
+import type {
+  ChartPoint,
+  ChartRange,
+  InstrumentSeries,
+  MarketCode,
+} from "../types"
 
-/** 去掉交易所后缀，便于标的配置的 `code` 与走势 `symbol` 对齐 */
-export const normalizeInstrumentSymbol = (symbol: string): string =>
-  symbol
-    .trim()
-    .replace(/\.(SS|SZ|SH|BJ)$/i, "")
+/** 非置顶尾部：美股 → 港股 → A 股 */
+const TAIL_MARKET_ORDER: Record<MarketCode, number> = {
+  US: 0,
+  HK: 1,
+  CN: 2,
+}
 
-/** 从标的配置 `code` 得到有序、去重后的键（与 `normalizeInstrumentSymbol` 规则一致） */
+/** 从标的配置 `code` 得到有序、去重后的列表（仅 trim） */
 export const orderedCodesFromTargets = (codes: readonly string[]): string[] => {
   const seen = new Set<string>()
   const out: string[] = []
   for (const raw of codes) {
-    const key = normalizeInstrumentSymbol(raw)
+    const key = raw.trim()
     if (!key || seen.has(key)) continue
     seen.add(key)
     out.push(key)
@@ -20,23 +26,105 @@ export const orderedCodesFromTargets = (codes: readonly string[]): string[] => {
 }
 
 /**
- * 仅保留指定代码，顺序与 `orderedSymbols` 一致；图表中不存在的代码不会出现。
+ * 仅保留指定代码，顺序与 `orderedCodes` 一致；图表中不存在的不会出现。
+ * 标的配置的 `code` 与走势里的 `instrument.id` 按 trim 后字符串相等匹配。
  */
-export const filterSeriesByDisplaySymbols = (
+export const filterSeriesByTargetCodes = (
   series: InstrumentSeries[],
-  orderedSymbols: readonly string[]
+  orderedCodes: readonly string[]
 ): InstrumentSeries[] => {
-  const want = new Set(orderedSymbols)
-  const bySymbol = new Map<string, InstrumentSeries>()
+  const want = new Set(orderedCodes)
+  const byId = new Map<string, InstrumentSeries>()
   for (const row of series) {
-    const key = normalizeInstrumentSymbol(row.instrument.symbol)
-    if (want.has(key) && !bySymbol.has(key)) {
-      bySymbol.set(key, row)
+    const key = row.instrument.id.trim()
+    if (want.has(key) && !byId.has(key)) {
+      byId.set(key, row)
     }
   }
-  return orderedSymbols
-    .map((sym) => bySymbol.get(sym))
+  return orderedCodes
+    .map((code) => byId.get(code))
     .filter((row): row is InstrumentSeries => row !== undefined)
+}
+
+/**
+ * 将 `instrument.symbol`（trim 后）与 `pinnedSymbols` 相等的项依次提到最前，其余保持原顺序。
+ */
+export const reorderSeriesWithPinnedSymbols = (
+  series: InstrumentSeries[],
+  pinnedSymbols: readonly string[]
+): InstrumentSeries[] => {
+  const pins = pinnedSymbols.map((s) => s.trim()).filter(Boolean)
+  const head: InstrumentSeries[] = []
+  const headIds = new Set<string>()
+  for (const sym of pins) {
+    const found = series.find(
+      (row) => row.instrument.symbol.trim() === sym
+    )
+    if (found) {
+      head.push(found)
+      headIds.add(found.instrument.id)
+    }
+  }
+  const tail = series.filter((row) => !headIds.has(row.instrument.id))
+  return [...head, ...tail]
+}
+
+/**
+ * 置顶块之后，按市场顺序 美股 → 港股 → A 股（同市场内保持原相对顺序）。
+ */
+export const sortTailByMarketUsHkCn = (
+  series: InstrumentSeries[],
+  pinnedSymbols: readonly string[]
+): InstrumentSeries[] => {
+  const pinSym = new Set(pinnedSymbols.map((s) => s.trim()))
+  const firstTailIdx = series.findIndex(
+    (s) => !pinSym.has(s.instrument.symbol.trim())
+  )
+  if (firstTailIdx === -1) return series
+  const head = series.slice(0, firstTailIdx)
+  const tail = series.slice(firstTailIdx)
+  const tailSorted = [...tail].sort(
+    (a, b) =>
+      TAIL_MARKET_ORDER[a.instrument.market] -
+      TAIL_MARKET_ORDER[b.instrument.market]
+  )
+  return [...head, ...tailSorted]
+}
+
+/** 拆成置顶行与后续（用于分区渲染与横线） */
+export const splitPinnedHeadAndTail = (
+  series: InstrumentSeries[],
+  pinnedSymbols: readonly string[]
+): { head: InstrumentSeries[]; tail: InstrumentSeries[] } => {
+  const pinSym = new Set(pinnedSymbols.map((s) => s.trim()))
+  const firstTailIdx = series.findIndex(
+    (s) => !pinSym.has(s.instrument.symbol.trim())
+  )
+  if (firstTailIdx === -1) {
+    return { head: series, tail: [] }
+  }
+  return {
+    head: series.slice(0, firstTailIdx),
+    tail: series.slice(firstTailIdx),
+  }
+}
+
+/** 走势看板尾部按市场分块（顺序：美股、港股、A 股），空市场省略 */
+export const tailBlocksByMarketUsHkCn = (
+  tail: InstrumentSeries[]
+): { market: MarketCode; label: string; items: InstrumentSeries[] }[] => {
+  const defs: { market: MarketCode; label: string }[] = [
+    { market: "US", label: "美股" },
+    { market: "HK", label: "港股" },
+    { market: "CN", label: "A 股" },
+  ]
+  return defs
+    .map(({ market, label }) => ({
+      market,
+      label,
+      items: tail.filter((s) => s.instrument.market === market),
+    }))
+    .filter((b) => b.items.length > 0)
 }
 
 const addCalendarDays = (isoDate: string, deltaDays: number): string => {

@@ -1,9 +1,13 @@
 "use client"
 
-import { useId } from "react"
+import { useId, useMemo } from "react"
 import { Loader2Icon } from "lucide-react"
-import { CHART_RANGE_DESCRIPTION } from "../constants"
+import { CHART_RANGE_DESCRIPTION, PRISM_TREND_PINNED_SYMBOLS } from "../constants"
 import { usePrismChartData } from "../hooks/use-prism-chart-data"
+import {
+  splitPinnedHeadAndTail,
+  tailBlocksByMarketUsHkCn,
+} from "../lib/slice-chart-series"
 import type { ChartRange } from "../types"
 import { ChartRangeSelect } from "./chart-range-select"
 import { InstrumentSparklineCard } from "./instrument-sparkline-card"
@@ -20,6 +24,20 @@ export const TrendBoardPanel = ({
   const { loading, series, error, targetCodeCount } = usePrismChartData(range)
   const headingId = useId()
   const rangeSelectId = useId()
+
+  const { headSeries, tailBlocks } = useMemo(() => {
+    const { head, tail } = splitPinnedHeadAndTail(
+      series,
+      PRISM_TREND_PINNED_SYMBOLS
+    )
+    return {
+      headSeries: head,
+      tailBlocks: tailBlocksByMarketUsHkCn(tail),
+    }
+  }, [series])
+
+  const gridClassName =
+    "grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
 
   return (
     <section
@@ -50,7 +68,8 @@ export const TrendBoardPanel = ({
           <p className="text-xs">
             展示标的与顺序来自「标的配置」全量列表的{" "}
             <span className="font-mono">code</span>
-            ，与走势接口返回的 symbol（去后缀）匹配。每个自然日仅拉取一次近三年数据至本地缓存，切换周期不重复请求。
+            ，与走势接口里品种的 <span className="font-mono">instrument.id</span>{" "}
+            写法一致（首尾空白会忽略）。每个自然日仅拉取一次近三年数据至本地缓存，切换周期不重复请求。
           </p>
         </div>
       </div>
@@ -87,20 +106,46 @@ export const TrendBoardPanel = ({
         >
           {targetCodeCount === 0
             ? "标的配置中暂无有效 code，请先在「标的配置」页签添加标的。"
-            : "走势数据中未匹配到已配置的 code，请确认标的代码与 yfinance 品种一致。"}
+            : "走势数据中未匹配到已配置的 code，请确认与接口返回的 instrument.id 一致。"}
         </div>
       ) : !error ? (
-        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-          {series.map(({ instrument, points }) => (
-            <li key={instrument.id} className="min-w-0">
-              <InstrumentSparklineCard
-                instrument={instrument}
-                points={points}
-                range={range}
-              />
-            </li>
+        <div className="space-y-0">
+          {headSeries.length > 0 ? (
+            <ul className={gridClassName}>
+              {headSeries.map(({ instrument, points }) => (
+                <li key={instrument.id} className="min-w-0">
+                  <InstrumentSparklineCard
+                    instrument={instrument}
+                    points={points}
+                    range={range}
+                  />
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {tailBlocks.map((block, blockIndex) => (
+            <div key={block.market} className="space-y-0">
+              {(headSeries.length > 0 || blockIndex > 0) ? (
+                <hr
+                  className="border-border my-6"
+                  role="separator"
+                  aria-orientation="horizontal"
+                />
+              ) : null}
+              <ul className={gridClassName}>
+                {block.items.map(({ instrument, points }) => (
+                  <li key={instrument.id} className="min-w-0">
+                    <InstrumentSparklineCard
+                      instrument={instrument}
+                      points={points}
+                      range={range}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
-        </ul>
+        </div>
       ) : null}
     </section>
   )
