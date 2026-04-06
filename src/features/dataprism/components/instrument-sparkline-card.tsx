@@ -144,9 +144,6 @@ export const InstrumentSparklineCard = ({
             </ResponsiveContainer>
           </div>
         )}
-        <p className="text-muted-foreground mt-2 text-xs" aria-hidden="true">
-          纵轴：收盘价
-        </p>
       </CardContent>
     </Card>
   )

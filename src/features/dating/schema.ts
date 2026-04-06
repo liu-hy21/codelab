@@ -44,3 +44,12 @@ export type DatingTargetUpdateFormInput = z.input<
 export type DatingTargetUpdateFormValues = z.output<
   typeof datingTargetUpdateFormSchema
 >
+
+export const talkWisdomMutateSchema = z.object({
+  id: z.number().int().positive().optional(),
+  content: z.string().min(1, "内容不能为空"),
+  scene: z.string().optional(),
+  tag: z.string().optional(),
+})
+
+export type TalkWisdomMutateValues = z.infer<typeof talkWisdomMutateSchema>

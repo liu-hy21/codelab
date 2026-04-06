@@ -1009,8 +1009,8 @@ export const DatingTargetsPanel = () => {
                 value={detailTarget.linkScore ?? "—"}
               />
               <InfoRow
-                label="计算指标"
-                value={detailTarget.calculateIndex ?? "—"}
+                label="聊天记录"
+                value={detailTarget.chatRecord ?? "—"}
               />
               <InfoRow
                 label="生日"

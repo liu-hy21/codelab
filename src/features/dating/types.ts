@@ -33,7 +33,7 @@ export interface DatingTargetVO {
   id: number
   name: string
   info: DatingTargetInfo | null
-  calculateIndex: string | null
+  chatRecord: string | null
   linkScore: string | null
 }
 
@@ -61,4 +61,24 @@ export interface DatingTargetAddRequest {
 
 export interface DatingTargetUpdateRequest extends DatingTargetAddRequest {
   id: number
+}
+
+export interface TalkWisdomVO {
+  id: number
+  content: string
+  scene: string
+  tag: string
+}
+
+export interface TalkWisdomAddRequest {
+  content: string
+  scene?: string
+  tag?: string
+}
+
+export interface TalkWisdomUpdateRequest {
+  id: number
+  content: string
+  scene?: string
+  tag?: string
 }

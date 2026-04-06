@@ -89,7 +89,7 @@
 | id | number | 主键 |
 | name | string | 姓名 |
 | info | object \| null | 详情对象，库中 `info` 为空则为 `null` |
-| calculateIndex | string | 计算指标 |
+| chatRecord | string | 聊天记录 |
 | linkScore | string | 链接分数 |
 
 **`info` 对象字段**（`DatingTargetInfo`）：
@@ -152,7 +152,7 @@
         "moneyView": null,
         "valueView": null
       },
-      "calculateIndex": null,
+      "chatRecord": null,
       "linkScore": null
     }
   ]

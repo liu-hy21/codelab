@@ -4,8 +4,9 @@ import { useId, useState } from "react"
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DatingTargetsPanel } from "@/features/dating/components/dating-targets-panel"
+import { TalkWisdomPanel } from "@/features/dating/components/talk-wisdom-panel"
 
-const TABS = ["人物数据", "AI决策", "理念知识库"] as const
+const TABS = ["人物数据", "AI决策", "交流智慧"] as const
 
 export default function ChatPage() {
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("人物数据")
@@ -82,21 +83,13 @@ export default function ChatPage() {
           </div>
         ) : null}
 
-        {activeTab === "理念知识库" ? (
+        {activeTab === "交流智慧" ? (
           <div
             role="tabpanel"
-            id={`${tabListId}-理念知识库-panel`}
-            aria-labelledby={`${tabListId}-理念知识库`}
+            id={`${tabListId}-交流智慧-panel`}
+            aria-labelledby={`${tabListId}-交流智慧`}
           >
-            <Card>
-              <CardHeader>
-                <CardTitle>理念知识库</CardTitle>
-                <CardDescription>存储和管理理念相关知识</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p>理念知识库正在开发中...</p>
-              </CardContent>
-            </Card>
+            <TalkWisdomPanel />
           </div>
         ) : null}
       </div>
